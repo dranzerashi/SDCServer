@@ -1,14 +1,11 @@
-/* 
-   Mathieu Stefani, 07 février 2016
-   
-   Example of a REST endpoint with routing
-*/
-
 #include <algorithm>
 
 #include <pistache/http.h>
 #include <pistache/router.h>
 #include <pistache/endpoint.h>
+
+#include "threadHandler.hpp"
+
 
 using namespace std;
 using namespace Pistache;
@@ -31,9 +28,9 @@ void handleReady(const Rest::Request&, Http::ResponseWriter response) {
 
 }
 
-class StatsEndpoint {
+class OpticalFlowEndpoint {
 public:
-    StatsEndpoint(Address addr)
+    OpticalFlowEndpoint(Address addr)
         : httpEndpoint(std::make_shared<Http::Endpoint>(addr))
     { }
 
@@ -57,12 +54,34 @@ public:
 private:
     void setupRoutes() {
         using namespace Rest;
+        Routes::Post(router, "/start", Routes::bind(&OpticalFlowEndpoint::startMonitoringOnThread, this));
+        Routes::Get(router, "/stop/:cameraID/:configID", Routes::bind(&OpticalFlowEndpoint::stopMonitoringOnThread, this));
 
-        Routes::Post(router, "/record/:name/:value?", Routes::bind(&StatsEndpoint::doRecordMetric, this));
-        Routes::Get(router, "/value/:name", Routes::bind(&StatsEndpoint::doGetMetric, this));
-        Routes::Get(router, "/ready", Routes::bind(&Generic::handleReady));
-        Routes::Get(router, "/auth", Routes::bind(&StatsEndpoint::doAuth, this));
+        // Routes::Post(router, "/record/:name/:value?", Routes::bind(&OpticalFlowEndpoint::doRecordMetric, this));
+        // Routes::Get(router, "/value/:name", Routes::bind(&OpticalFlowEndpoint::doGetMetric, this));
+        // Routes::Get(router, "/ready", Routes::bind(&Generic::handleReady));
+        // Routes::Get(router, "/auth", Routes::bind(&OpticalFlowEndpoint::doAuth, this));
 
+    }
+
+
+    void startMonitoringOnThread(const Rest::Request& request, Http::ResponseWriter response){
+      cout<<"Starting to Monitor on thread";
+      threadHandler.startThreadForMonitoring();
+      response.send(Http::Code::Ok, "Started");
+    }
+
+    void stopMonitoringOnThread(const Rest::Request& request, Http::ResponseWriter response){
+      string cameraID, configID;
+      if(request.hasParam(":cameraID")){
+        cameraID = request.param(":cameraID").as<std::string>();
+      }
+      if(request.hasParam(":configID")){
+        configID = request.param(":configID").as<std::string>();
+      }
+      threadHandler.stopThreadForMonitoring(cameraID, configID);
+      cout<<"Stopping Monitoring on Thread with CameraID: "<<cameraID<<" and configID: "<<configID<<endl;
+      response.send(Http::Code::Ok, "Stopped");
     }
 
     void doRecordMetric(const Rest::Request& request, Http::ResponseWriter response) {
@@ -147,6 +166,8 @@ private:
 
     std::shared_ptr<Http::Endpoint> httpEndpoint;
     Rest::Router router;
+
+    ThreadHandler threadHandler;
 };
 
 int main(int argc, char *argv[]) {
@@ -166,7 +187,7 @@ int main(int argc, char *argv[]) {
     cout << "Cores = " << hardware_concurrency() << endl;
     cout << "Using " << thr << " threads" << endl;
 
-    StatsEndpoint stats(addr);
+    OpticalFlowEndpoint stats(addr);
 
     stats.init(thr);
     stats.start();
