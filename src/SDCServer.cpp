@@ -54,7 +54,7 @@ public:
 private:
     void setupRoutes() {
         using namespace Rest;
-        Routes::Post(router, "/start", Routes::bind(&OpticalFlowEndpoint::startMonitoringOnThread, this));
+        Routes::Get(router, "/start/:cameraID/:configID", Routes::bind(&OpticalFlowEndpoint::startMonitoringOnThread, this));
         Routes::Get(router, "/stop/:cameraID/:configID", Routes::bind(&OpticalFlowEndpoint::stopMonitoringOnThread, this));
 
         // Routes::Post(router, "/record/:name/:value?", Routes::bind(&OpticalFlowEndpoint::doRecordMetric, this));
@@ -66,8 +66,14 @@ private:
 
 
     void startMonitoringOnThread(const Rest::Request& request, Http::ResponseWriter response){
-      cout<<"Starting to Monitor on thread";
-      threadHandler.startThreadForMonitoring();
+      string cameraID, configID;
+      if(request.hasParam(":cameraID")){
+        cameraID = request.param(":cameraID").as<std::string>();
+      }
+      if(request.hasParam(":configID")){
+        configID = request.param(":configID").as<std::string>();
+      }
+      threadHandler.startThreadForMonitoring(cameraID, configID);
       response.send(Http::Code::Ok, "Started");
     }
 
