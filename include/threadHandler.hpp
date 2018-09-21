@@ -15,9 +15,10 @@ class ThreadKey {
 class ThreadHandler{
     private:
         //std::map<ThreadKey, boost::thread::id> running_threads;
-        std::map<std::string, std::shared_ptr<boost::thread>> running_threads;
+        std::shared_ptr<std::map<std::string, bool>> running_threads;
 
     public:
+        ThreadHandler():running_threads(new std::map<std::string, bool>()){}
         void startThreadForMonitoring(std::string cameraID, std::string configID);
         void stopThreadForMonitoring(std::string cameraID, std::string configID);
 
