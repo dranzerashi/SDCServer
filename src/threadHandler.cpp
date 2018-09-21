@@ -23,7 +23,7 @@ void startOpticalFlowMonitoring()
     {
         VideoCapture capture;
         capture.open(inputName);
-        Mat frame, prev_frame;
+        Mat frame;
         OpticalFlowProcess ofp;
         while (true)
         {
@@ -34,17 +34,8 @@ void startOpticalFlowMonitoring()
                 cout<<"Frames Ended"<<endl;
                 break;
             }
-            // if (prev_frame.empty())
-            // {
-            //     prev_frame = frame;
-            //     continue;
-            // }
-            //imshow("frame1", prev_frame);
-            //if (waitKey(30) >= 0)break;
-
-            //processFrameWithOpticalFlow(prev_frame, frame);
             ofp.process(frame);
-            //prev_frame = frame;
+            
             
             //wait(1);
             //boost::this_thread::interruption_point();

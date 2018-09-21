@@ -145,6 +145,9 @@ GpuMat preprocessImage(GpuMat img){
     inRange(frame_HSV_inrange, Scalar(low_H, low_S, low_V), Scalar(high_H, high_S, high_V), frame_threshold_inrange);
     frame_threshold.upload(frame_threshold_inrange);
     //todo morphology
+    Mat kernel = getStructuringElement(MORPH_RECT, cv::Size(8,8));//, cv::Point(4,4));
+    morphologyEx(frame_threshold_inrange, frame_threshold_inrange, MORPH_OPEN, kernel);
+    morphologyEx(frame_threshold_inrange, frame_threshold_inrange, MORPH_CLOSE, kernel);
 
     cv::cuda::cvtColor(img, frame_res, CV_BGR2YUV);
     vector<Mat> channels(3);
@@ -288,7 +291,12 @@ void OpticalFlowProcess::process(Mat frame){
 
         showFlow("Farn", d_flow);
     }
-
+    // {
+    //     Mat frame_show;
+    //     curr_frame.download(frame_show);
+    //     imshow("Frame 1", frame_show);
+    //     waitKey();
+    // }
 
     return;
 }
