@@ -41,14 +41,14 @@ void startOpticalFlowMonitoring(shared_ptr<map<string, bool>> running_threads, s
             //wait(1);
             //boost::this_thread::interruption_point();
         }
-        //destroyAllWindows();
         capture.release();
+        destroyAllWindows();
     }
     catch (boost::thread_interrupted &)
     {
         cout << "Thread interrupted" << endl;
     }
-
+    running_threads->at(threadKey)=false;
     cout << "Thread stopped" << endl;
 }
 }; // namespace ocv

@@ -135,7 +135,8 @@ static void showFlow(const char* name, const GpuMat& d_flow)
     waitKey();
 }
 
-GpuMat preprocessImage(GpuMat img){
+
+static GpuMat preprocessImage(GpuMat img){
     GpuMat frame_HSV, frame_threshold, frame_res, out_img;
     Mat frame_HSV_inrange, frame_threshold_inrange, frame_bit, toSplitFrame;
     cv::cuda::cvtColor(img, frame_HSV, CV_BGR2HSV);
@@ -256,6 +257,56 @@ void processFrameWithOpticalFlow(Mat frame0, Mat frame1)
 }
 
 
+static void processFlow(const Mat_<float>& flowx, const Mat_<float>& flowy, Mat& dst){
+    Mat magnitude, angle;
+    cv::cartToPolar(flowx, flowy, magnitude, angle, true);
+    Mat mag;
+    normalize(magnitude, mag, 0, 255, NORM_MINMAX);
+    dst.create(flowx.size(), CV_8UC3);
+    dst.setTo(Scalar::all(0));
+    for (int y = 0; y < angle.rows; ++y)
+    {
+        for (int x = 0; x < angle.cols; ++x)
+        {
+            Point2f u(flowx(y, x), flowy(y, x));
+
+            if (isFlowCorrect(u)){
+            uchar a = static_cast<uchar>(angle.at<float>(y, x)/2);
+            uchar m = static_cast<uchar>(mag.at<float>(y, x));
+            Vec3b pixel;
+            pixel[0] = static_cast<uchar>(a);
+            pixel[1] = static_cast<uchar>(255);
+            pixel[2] = static_cast<uchar>(m);
+            dst.at<Vec3b>(y, x) = pixel;
+
+            }
+        }
+
+    }
+
+    //Mat frame_result;
+    cv::cvtColor(dst, dst, CV_HSV2BGR);
+    
+    
+
+}
+
+static void showProcessFlow(const char* name, const GpuMat& d_flow)
+{
+    GpuMat planes[2];
+    cuda::split(d_flow, planes);
+
+    Mat flowx(planes[0]);
+    Mat flowy(planes[1]);
+
+    Mat out;
+    processFlow(flowx, flowy, out);
+
+    imshow(name, out);
+    waitKey(25);
+}
+
+
 void OpticalFlowProcess::process(Mat frame){
     if (frame.empty())
     {
@@ -288,8 +339,9 @@ void OpticalFlowProcess::process(Mat frame){
 
         const double timeSec = (getTickCount() - start) / getTickFrequency();
         cout << "Farn : " << timeSec << " sec" << endl;
+        showProcessFlow("Process flow", d_flow);
 
-        showFlow("Farn", d_flow);
+        //showFlow("Farn", d_flow);
     }
     // {
     //     Mat frame_show;
