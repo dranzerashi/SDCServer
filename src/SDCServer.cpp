@@ -6,9 +6,12 @@
 
 #include "threadHandler.hpp"
 
+#include "nlohmann/json.hpp"
+#include "camconfig.hpp"
 
 using namespace std;
 using namespace Pistache;
+using json = nlohmann::json;
 
 void printCookies(const Http::Request& req) {
     auto cookies = req.cookies();
@@ -54,7 +57,7 @@ public:
 private:
     void setupRoutes() {
         using namespace Rest;
-        Routes::Get(router, "/start/:cameraID/:configID", Routes::bind(&OpticalFlowEndpoint::startMonitoringOnThread, this));
+        Routes::Post(router, "/start/:cameraID/:configID", Routes::bind(&OpticalFlowEndpoint::startMonitoringOnThread, this));
         Routes::Get(router, "/stop/:cameraID/:configID", Routes::bind(&OpticalFlowEndpoint::stopMonitoringOnThread, this));
 
         // Routes::Post(router, "/record/:name/:value?", Routes::bind(&OpticalFlowEndpoint::doRecordMetric, this));
@@ -66,15 +69,22 @@ private:
 
 
     void startMonitoringOnThread(const Rest::Request& request, Http::ResponseWriter response){
-      string cameraID, configID;
-      if(request.hasParam(":cameraID")){
-        cameraID = request.param(":cameraID").as<std::string>();
-      }
-      if(request.hasParam(":configID")){
-        configID = request.param(":configID").as<std::string>();
-      }
-      threadHandler.startThreadForMonitoring(cameraID, configID);
-      response.send(Http::Code::Ok, "Started");
+        string cameraID, configID;
+        if(request.hasParam(":cameraID")){
+            cameraID = request.param(":cameraID").as<std::string>();
+        }
+        if(request.hasParam(":configID")){
+            configID = request.param(":configID").as<std::string>();
+        }
+        string content=request.body();
+        cout<<"Content "<<content<<endl;
+        json j = json::parse(content);
+        CamConfig cfg(j);
+    
+        //cout<<j["name"].get<string>()<<" is a "<<j["race"].get<string>()<<" who is always "<<j["status"].get<string>()<<endl;
+      
+        //threadHandler.startThreadForMonitoring(cameraID, configID);
+        response.send(Http::Code::Ok, "Started");
     }
 
     void stopMonitoringOnThread(const Rest::Request& request, Http::ResponseWriter response){
