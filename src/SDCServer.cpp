@@ -83,7 +83,7 @@ private:
     
         //cout<<j["name"].get<string>()<<" is a "<<j["race"].get<string>()<<" who is always "<<j["status"].get<string>()<<endl;
       
-        //threadHandler.startThreadForMonitoring(cameraID, configID);
+        threadHandler.startThreadForMonitoring(cfg);
         response.send(Http::Code::Ok, "Started");
     }
 

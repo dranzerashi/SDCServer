@@ -5,6 +5,7 @@
 #include <boost/chrono.hpp>
 #include "optical_flow.hpp"
 
+
 using namespace std;
 using namespace cv;
 using namespace cv::cuda;
@@ -15,7 +16,7 @@ void wait(int seconds)
 {
     boost::this_thread::sleep_for(boost::chrono::seconds{seconds});
 }
-void startOpticalFlowMonitoring(shared_ptr<map<string, bool>> running_threads, string threadKey)
+void startOpticalFlowMonitoring(shared_ptr<map<string, bool>> running_threads, CamConfig cfg)
 {
     string inputName = "/home/allahbaksh/workspaces/smokeDetectionWorkspace/SDCServer/data/yellow_smoke.mp4";
     cout << "Thread started successfully at: " << boost::this_thread::get_id() << endl;
@@ -24,13 +25,13 @@ void startOpticalFlowMonitoring(shared_ptr<map<string, bool>> running_threads, s
         VideoCapture capture;
         capture.open(inputName);
         Mat frame;
-        OpticalFlowProcess ofp;
+        OpticalFlowProcess ofp(cfg);
         while (true)
         {
             cout << "Thread running at: " << boost::this_thread::get_id() << endl;
             capture >> frame;
             //cout<<"RunningThread:"<<running_threads->at(threadKey)<<endl;
-            if (frame.empty() || !running_threads->at(threadKey))
+            if (frame.empty() || !running_threads->at(cfg.getKey()))
             {
                 cout<<"Frames Ended"<<endl;
                 break;
@@ -48,19 +49,24 @@ void startOpticalFlowMonitoring(shared_ptr<map<string, bool>> running_threads, s
     {
         cout << "Thread interrupted" << endl;
     }
-    running_threads->at(threadKey)=false;
+    running_threads->at(cfg.getKey())=false;
     cout << "Thread stopped" << endl;
 }
 }; // namespace ocv
 
-void ThreadHandler::startThreadForMonitoring(std::string cameraID, std::string configID)
+void ThreadHandler::startThreadForMonitoring(CamConfig cfg)
 {
     cout << "Starting thread" << endl;
     //ThreadKey threadKey(cameraID, configID);
-    string threadKey = cameraID + ":" + configID;
+    string threadKey = cfg.getKey();
     cout << "threadKey" << threadKey << endl;
-    running_threads->insert(std::pair<string, bool>(threadKey, true));
-    boost::thread t(ocv::startOpticalFlowMonitoring, running_threads, threadKey);
+    if (running_threads->count(threadKey) == 0)
+    {
+        running_threads->insert(std::pair<string, bool>(threadKey, true));
+    }else{
+        running_threads->at(threadKey)=true;
+    }
+    boost::thread t(ocv::startOpticalFlowMonitoring, running_threads, cfg);
     //shared_ptr<boost::thread> threadPtr(&t);
     //running_threads.insert(std::pair<string, bool>(threadKey, true));
 }

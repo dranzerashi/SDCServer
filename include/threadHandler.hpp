@@ -1,8 +1,8 @@
 #include<iostream>
+#include <map> 
 #include <boost/thread.hpp>
 #include <boost/chrono.hpp>
-#include <map>
-
+#include "camconfig.hpp"
 class ThreadKey {
     private:
         std::string cameraID;
@@ -19,7 +19,7 @@ class ThreadHandler{
 
     public:
         ThreadHandler():running_threads(new std::map<std::string, bool>()){}
-        void startThreadForMonitoring(std::string cameraID, std::string configID);
+        void startThreadForMonitoring(CamConfig cfg);
         void stopThreadForMonitoring(std::string cameraID, std::string configID);
 
 };

@@ -338,7 +338,7 @@ void OpticalFlowProcess::process(Mat frame){
         farn->calc(prev_frame, curr_frame, d_flow);
 
         const double timeSec = (getTickCount() - start) / getTickFrequency();
-        cout << "Farn : " << timeSec << " sec" << endl;
+        cout << "Farn : " << timeSec << " sec " <<cfg.getKey()<< endl;
         showProcessFlow("Process flow", d_flow);
 
         //showFlow("Farn", d_flow);

@@ -1,3 +1,4 @@
+#pragma once
 #include <iostream>
 #include <regex>
 #include "opencv2/core.hpp"
@@ -77,7 +78,7 @@ class CamConfig {
             if(camID.empty()){
                 return NULL;
             }
-            return camID + std::to_string(configId);
+            return camID + ":" + std::to_string(configId);
         }
 
         int getThreshold(){
