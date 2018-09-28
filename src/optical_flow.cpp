@@ -1,5 +1,7 @@
 
 #include "optical_flow.hpp"
+#include "eventsApi.hpp"
+#include <time.h>
 
 using namespace std;
 using namespace cv;
@@ -136,16 +138,21 @@ static void showFlow(const char* name, const GpuMat& d_flow)
 }
 
 
-static GpuMat preprocessImage(GpuMat img){
+static GpuMat preprocessImage(GpuMat img, CamConfig cfg){
+    cv:Rect ROI = cfg.getROICoords();
+    // crop image
+    img = img(ROI);
     GpuMat frame_HSV, frame_threshold, frame_res, out_img;
     Mat frame_HSV_inrange, frame_threshold_inrange, frame_bit, toSplitFrame;
     cv::cuda::cvtColor(img, frame_HSV, CV_BGR2HSV);
-    int low_H = 20, low_S = 0, low_V = 0;
-    int high_H = 66, high_S = 255, high_V = 255;
+
+    cv::Vec3b min_color_range = cfg.getMinColorRange();
+    cv::Vec3b max_color_range = cfg.getMaxColorRange();
+
     frame_HSV.download(frame_HSV_inrange);
-    inRange(frame_HSV_inrange, Scalar(low_H, low_S, low_V), Scalar(high_H, high_S, high_V), frame_threshold_inrange);
+    inRange(frame_HSV_inrange, min_color_range, max_color_range, frame_threshold_inrange);
     frame_threshold.upload(frame_threshold_inrange);
-    //todo morphology
+    
     Mat kernel = getStructuringElement(MORPH_RECT, cv::Size(8,8));//, cv::Point(4,4));
     morphologyEx(frame_threshold_inrange, frame_threshold_inrange, MORPH_OPEN, kernel);
     morphologyEx(frame_threshold_inrange, frame_threshold_inrange, MORPH_CLOSE, kernel);
@@ -187,8 +194,8 @@ void processFrameWithOpticalFlow(Mat frame0, Mat frame1)
     GpuMat d_frame0;
     GpuMat d_frame1;
     
-    d_frame0 = preprocessImage(td_frame0);
-    d_frame1 = preprocessImage(td_frame1);
+    //d_frame0 = preprocessImage(td_frame0, cfg);
+    //d_frame1 = preprocessImage(td_frame1, cfg);
 
     GpuMat d_flow(frame0.size(), CV_32FC2);
 
@@ -257,7 +264,9 @@ void processFrameWithOpticalFlow(Mat frame0, Mat frame1)
 }
 
 
-static void processFlow(const Mat_<float>& flowx, const Mat_<float>& flowy, Mat& dst){
+static void processFlow(const Mat_<float>& flowx, const Mat_<float>& flowy, Mat& dst, bool &is_smoke){
+    int valid_angle_count = 0;
+    float valid_angle_percentage = 0.0;
     Mat magnitude, angle;
     cv::cartToPolar(flowx, flowy, magnitude, angle, true);
     Mat mag;
@@ -279,20 +288,22 @@ static void processFlow(const Mat_<float>& flowx, const Mat_<float>& flowy, Mat&
             pixel[2] = static_cast<uchar>(m);
             dst.at<Vec3b>(y, x) = pixel;
 
+            valid_angle_count = (angle.at<float>(y, x) >= 30 && angle.at<float>(y, x) <= 150 ) ? valid_angle_count + 1: valid_angle_count;
             }
         }
 
     }
-
-    //Mat frame_result;
+    valid_angle_percentage = float(valid_angle_count)/(angle.rows * angle.cols) * 100;
+    // cout<<"valid_angle_percentage: "<<valid_angle_percentage<<endl;
+    is_smoke = ( valid_angle_percentage >= MOVEMENT_INTENSITY_THRESHOLD) ? true : false;
+    
     cv::cvtColor(dst, dst, CV_HSV2BGR);
-    
-    
 
 }
 
-static void showProcessFlow(const char* name, const GpuMat& d_flow)
+static bool showProcessFlow(const char* name, const GpuMat& d_flow)
 {
+    bool is_smoke = false;
     GpuMat planes[2];
     cuda::split(d_flow, planes);
 
@@ -300,12 +311,32 @@ static void showProcessFlow(const char* name, const GpuMat& d_flow)
     Mat flowy(planes[1]);
 
     Mat out;
-    processFlow(flowx, flowy, out);
-
+    processFlow(flowx, flowy, out, is_smoke);
+    if(is_smoke)
+        cout<<"Smoke Detected!!"<<endl;
     imshow(name, out);
     waitKey(25);
+    return is_smoke;
 }
 
+void OpticalFlowProcess::start_timer(){
+    if(detection_start_time == 0)
+        detection_start_time = getTickCount();
+    
+    buffer_time = detection_start_time + cfg.getThreshold()/float(2);
+}
+
+int64 OpticalFlowProcess::timer_duration(){
+    if(detection_start_time > 0)
+        return (getTickCount() - detection_start_time)/getTickFrequency();
+    else
+        return 0;
+}
+
+void OpticalFlowProcess::stop_timer(){
+    detection_start_time = 0;
+    buffer_time = 0;
+}
 
 void OpticalFlowProcess::process(Mat frame){
     if (frame.empty())
@@ -316,13 +347,13 @@ void OpticalFlowProcess::process(Mat frame){
     {
         GpuMat temp_frame;
         temp_frame.upload(frame);
-        prev_frame = preprocessImage(temp_frame);
+        prev_frame = preprocessImage(temp_frame, cfg);
         return;
     }
     else{
         GpuMat temp_frame;
         temp_frame.upload(frame);
-        curr_frame = preprocessImage(temp_frame);
+        curr_frame = preprocessImage(temp_frame, cfg);
     }
     if (prev_frame.size() != curr_frame.size())
     {
@@ -339,7 +370,37 @@ void OpticalFlowProcess::process(Mat frame){
 
         const double timeSec = (getTickCount() - start) / getTickFrequency();
         cout << "Farn : " << timeSec << " sec " <<cfg.getKey()<< endl;
-        showProcessFlow("Process flow", d_flow);
+        bool is_smoke_detected = showProcessFlow("Process flow", d_flow);
+
+        if( is_smoke_detected ){
+            if (detection_start_time == 0)
+                start_timer();
+            else
+                buffer_time = detection_start_time + cfg.getThreshold()/float(2);
+            
+            int64 current_duration = timer_duration();
+            if( current_duration > cfg.getThreshold() )
+            {
+                //make POST call
+                time_t curr_time;
+                tm * curr_tm;
+                time(&curr_time);
+                curr_tm = gmtime(&curr_time);
+                char time_str[51];
+                strftime(time_str, 50, "%FT%T.000Z", curr_tm);
+                eventns::Event event(cfg.getCamID(), time_str, frame, "image/jpg","SMOKE_DETECTION");
+                // eventns::Event event(cfg.getCamID(), "2018-09-26T01:17:56.787Z", frame, "image/jpg","SMOKE_DETECTION");
+
+                postEvent(event);
+                stop_timer();
+            }
+        } else {
+            int64 current_duration = timer_duration();
+            if( detection_start_time > 0 && current_duration > buffer_time )
+                stop_timer();
+        }
+
+        
 
         //showFlow("Farn", d_flow);
     }

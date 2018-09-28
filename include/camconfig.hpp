@@ -85,17 +85,21 @@ class CamConfig {
             return std::stoi(threshold);
         }
 
+        std::string getCamID(){
+            return camID;
+        }
+
         cv::Rect getROICoords(){
             std::regex r("\\((\\d+),(\\d+)\\);\\((\\d+),(\\d+)\\);"); 
             std::smatch matches;
             std::regex_match (roiCoords, matches, r);
             cv::Rect roi(std::stoi(matches[1]),
                         std::stoi(matches[2]),
-                        std::stoi(matches[3]),
-                        std::stoi(matches[4]));
-            for(int i=0; i<matches.size();i++){
-                std::cout<<"Match: "<<matches[i]<<std::endl;
-            }
+                        std::stoi(matches[3])-std::stoi(matches[1]),
+                        std::stoi(matches[4])-std::stoi(matches[2]));
+            // for(int i=0; i<matches.size();i++){
+            //     std::cout<<"ROI match: "<<matches[i]<<std::endl;
+            // }
             return roi;
         }
 
@@ -107,9 +111,9 @@ class CamConfig {
             minRange[0] = std::stoi(matches[2]);
             minRange[1] = std::stoi(matches[4]);
             minRange[2] = std::stoi(matches[6]);
-            for(int i=0; i<matches.size();i++){
-                std::cout<<"Match: "<<matches[i]<<std::endl;
-            }
+            // for(int i=0; i<matches.size();i++){
+            //     std::cout<<"Match: "<<matches[i]<<std::endl;
+            // }
             return minRange;
         }
 

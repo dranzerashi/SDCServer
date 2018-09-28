@@ -5,7 +5,7 @@
 #include <pistache/endpoint.h>
 
 #include "threadHandler.hpp"
-#include "eventsApi.hpp"
+
 
 #include "nlohmann/json.hpp"
 #include "camconfig.hpp"

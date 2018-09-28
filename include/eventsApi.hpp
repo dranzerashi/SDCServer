@@ -10,7 +10,7 @@
 using namespace std;
 using namespace restc_cpp;
 
-void postEvent(Event event)
+void postEvent(eventns::Event event)
 {
    auto rest_client = RestClient::Create();
    
