@@ -1,3 +1,4 @@
+#pragma once
 #include <iostream>
 #include <cstddef>
 #include <b64/encode.h>

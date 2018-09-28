@@ -1,3 +1,4 @@
+#pragma once
 #include <iostream>
 #include <string>
 #include "restc-cpp/restc-cpp.h"
