@@ -5,13 +5,14 @@
 #include <pistache/endpoint.h>
 
 #include "threadHandler.hpp"
+#include "eventsApi.hpp"
 
 #include "nlohmann/json.hpp"
 #include "camconfig.hpp"
 
 using namespace std;
 using namespace Pistache;
-using json = nlohmann::json;
+using njson = nlohmann::json;
 
 void printCookies(const Http::Request& req) {
     auto cookies = req.cookies();
@@ -78,7 +79,7 @@ private:
         }
         string content=request.body();
         cout<<"Content "<<content<<endl;
-        json j = json::parse(content);
+        njson j = njson::parse(content);
         CamConfig cfg(j);
     
         //cout<<j["name"].get<string>()<<" is a "<<j["race"].get<string>()<<" who is always "<<j["status"].get<string>()<<endl;
@@ -202,11 +203,13 @@ int main(int argc, char *argv[]) {
 
     cout << "Cores = " << hardware_concurrency() << endl;
     cout << "Using " << thr << " threads" << endl;
-
     OpticalFlowEndpoint stats(addr);
-
     stats.init(thr);
     stats.start();
-
     stats.shutdown();
+
+    //How to us post call
+    // cv::Mat image = imread( "../src/Images/download.jpeg", CV_LOAD_IMAGE_COLOR );
+    // Event event("AXIS0001", "2018-04-20T01:17:56.787Z", image, "image/jpg","SMOKE_DETECTION");
+    // postEvent(event);
 }
