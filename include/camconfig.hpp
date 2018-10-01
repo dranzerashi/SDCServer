@@ -14,6 +14,7 @@ enum class CameraStatus{
 class CamConfig {
     private:
         long id;
+        std::string source;
         std::string camID;
         std::string location;
         std::string region;
@@ -33,6 +34,8 @@ class CamConfig {
         CamConfig(json j){
             id = j["id"].get<long>();
             camID = j["camID"].get<std::string>();
+
+            source = j["source"].get<std::string>();
 
             if(!j["location"].empty()){
                 location = j["location"].get<std::string>();
@@ -87,6 +90,10 @@ class CamConfig {
 
         std::string getCamID(){
             return camID;
+        }
+
+        std::string getSource(){
+            return source;
         }
 
         cv::Rect getROICoords(){

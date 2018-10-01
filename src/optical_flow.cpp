@@ -163,6 +163,7 @@ static GpuMat preprocessImage(GpuMat img, CamConfig cfg){
     split(toSplitFrame, channels);
     cv::bitwise_and(channels[0], channels[0], frame_bit, frame_threshold_inrange);
 
+    // cv::imshow("Preprocessed image",frame_bit);
     out_img.upload(frame_bit);
     return out_img;
 
@@ -312,8 +313,8 @@ static bool showProcessFlow(const char* name, const GpuMat& d_flow)
 
     Mat out;
     processFlow(flowx, flowy, out, is_smoke);
-    if(is_smoke)
-        cout<<"Smoke Detected!!"<<endl;
+    // if(is_smoke)
+    //     cout<<"Smoke Detected!!"<<endl;
     imshow(name, out);
     waitKey(25);
     return is_smoke;
@@ -362,6 +363,8 @@ void OpticalFlowProcess::process(Mat frame){
     }
 
     cv::cuda::GpuMat d_flow(curr_frame.size(), CV_32FC2);
+    
+    std::string source_abs_path = cfg.getSource();
 
     {
         const int64 start = getTickCount();
@@ -370,7 +373,7 @@ void OpticalFlowProcess::process(Mat frame){
 
         const double timeSec = (getTickCount() - start) / getTickFrequency();
         cout << "Farn : " << timeSec << " sec " <<cfg.getKey()<< endl;
-        bool is_smoke_detected = showProcessFlow("Process flow", d_flow);
+        bool is_smoke_detected = showProcessFlow(source_abs_path.c_str(), d_flow);
 
         if( is_smoke_detected ){
             if (detection_start_time == 0)
@@ -387,8 +390,9 @@ void OpticalFlowProcess::process(Mat frame){
                 time(&curr_time);
                 curr_tm = gmtime(&curr_time);
                 char time_str[51];
+                Mat snapshot = frame(cfg.getROICoords());
                 strftime(time_str, 50, "%FT%T.000Z", curr_tm);
-                eventns::Event event(cfg.getCamID(), time_str, frame, "image/jpg","SMOKE_DETECTION");
+                eventns::Event event(cfg.getCamID(), time_str, snapshot, "image/jpg","SMOKE_DETECTION");
                 // eventns::Event event(cfg.getCamID(), "2018-09-26T01:17:56.787Z", frame, "image/jpg","SMOKE_DETECTION");
 
                 postEvent(event);

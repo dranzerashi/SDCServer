@@ -18,7 +18,7 @@ void wait(int seconds)
 }
 void startOpticalFlowMonitoring(shared_ptr<map<string, bool>> running_threads, CamConfig cfg)
 {
-    string inputName = "/home/allahbaksh/workspaces/smokeDetectionWorkspace/SDCServer/data/yellow_smoke.mp4";
+    string inputName = cfg.getSource(); // "/home/allahbaksh/workspaces/smokeDetectionWorkspace/SDCServer/data/yellow_smoke.mp4";
     cout << "Thread started successfully at: " << boost::this_thread::get_id() << endl;
     try
     {

@@ -40,20 +40,6 @@ namespace eventns{
                 e.eventType = j.at("eventType").get<std::string>();
         }
         string base64encoding(cv::Mat input){
-            // int width = input.cols;
-            // int height = input.rows;
-            // int type = input.type();
-            // size_t size = input.total() * input.elemSize();
-
-            // // Initialize a stringstream and write the data
-            
-            // ss.write((char*)(&width), sizeof(int));
-            // ss.write((char*)(&height), sizeof(int));
-            // ss.write((char*)(&type), sizeof(int));
-            // ss.write((char*)(&size), sizeof(size_t));
-
-            // // Write the whole image data
-            // ss.write((char*)input.data, size);
             vector<uchar> out;
             imencode(".jpg", input, out);
             string s(out.begin(), out.end());
