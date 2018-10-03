@@ -190,7 +190,7 @@ private:
 int main(int argc, char *argv[]) {
     Port port(9080);
 
-    int thr = 2;
+    int thr = 17;
 
     if (argc >= 2) {
         port = std::stol(argv[1]);

@@ -315,7 +315,7 @@ static bool showProcessFlow(const char* name, const GpuMat& d_flow)
     processFlow(flowx, flowy, out, is_smoke);
     // if(is_smoke)
     //     cout<<"Smoke Detected!!"<<endl;
-    imshow(name, out);
+    // imshow(name, out);
     waitKey(25);
     return is_smoke;
 }
