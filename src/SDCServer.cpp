@@ -58,7 +58,7 @@ public:
 private:
     void setupRoutes() {
         using namespace Rest;
-        Routes::Post(router, "/start/:cameraID/:configID", Routes::bind(&OpticalFlowEndpoint::startMonitoringOnThread, this));
+        Routes::Post(router, "/start", Routes::bind(&OpticalFlowEndpoint::startMonitoringOnThread, this));
         Routes::Get(router, "/stop/:cameraID/:configID", Routes::bind(&OpticalFlowEndpoint::stopMonitoringOnThread, this));
 
         // Routes::Post(router, "/record/:name/:value?", Routes::bind(&OpticalFlowEndpoint::doRecordMetric, this));

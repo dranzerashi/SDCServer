@@ -18,7 +18,7 @@ void wait(int seconds)
 }
 void startOpticalFlowMonitoring(shared_ptr<map<string, bool>> running_threads, CamConfig cfg)
 {
-    string inputName = cfg.getSource(); // "/home/allahbaksh/workspaces/smokeDetectionWorkspace/SDCServer/data/yellow_smoke.mp4";
+    string inputName = cfg.getIPAdress(); // "/home/allahbaksh/workspaces/smokeDetectionWorkspace/SDCServer/data/yellow_smoke.mp4";
     cout << "Thread started successfully at: " << boost::this_thread::get_id() << endl;
     try
     {
@@ -26,9 +26,12 @@ void startOpticalFlowMonitoring(shared_ptr<map<string, bool>> running_threads, C
         capture.open(inputName);
         Mat frame;
         OpticalFlowProcess ofp(cfg);
+        int ctr=0;
+        const int64 start = getTickCount();
+        bool is_fps_calculated = false;
         while (true)
         {
-            cout << "Thread running at: " << boost::this_thread::get_id() << endl;
+            // cout << "Thread running at: " << boost::this_thread::get_id() << endl;
             capture >> frame;
             //cout<<"RunningThread:"<<running_threads->at(threadKey)<<endl;
             if (frame.empty() || !running_threads->at(cfg.getKey()))
@@ -37,7 +40,13 @@ void startOpticalFlowMonitoring(shared_ptr<map<string, bool>> running_threads, C
                 break;
             }
             ofp.process(frame);
-            
+
+            ctr+=1;
+            int64 duration = float(getTickCount() - start) / getTickFrequency();
+            if(  duration > 5 && !is_fps_calculated){
+                is_fps_calculated = true;
+                cout<<"FPS for"<<inputName<<" is "<<ctr/duration<< endl;
+            }
             
             //wait(1);
             //boost::this_thread::interruption_point();

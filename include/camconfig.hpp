@@ -35,7 +35,11 @@ class CamConfig {
             id = j["id"].get<long>();
             camID = j["camID"].get<std::string>();
 
-            source = j["source"].get<std::string>();
+            
+
+            if(!j["source"].empty()){
+                source = j["source"].get<std::string>();
+            }
 
             if(!j["location"].empty()){
                 location = j["location"].get<std::string>();
@@ -95,6 +99,10 @@ class CamConfig {
         std::string getSource(){
             return source;
         }
+        std::string getIPAdress(){
+            return ipAddress;
+        }
+
 
         cv::Rect getROICoords(){
             std::regex r("\\((\\d+),(\\d+)\\);\\((\\d+),(\\d+)\\);"); 

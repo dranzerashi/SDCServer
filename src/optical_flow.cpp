@@ -372,7 +372,7 @@ void OpticalFlowProcess::process(Mat frame){
         farn->calc(prev_frame, curr_frame, d_flow);
 
         const double timeSec = (getTickCount() - start) / getTickFrequency();
-        cout << "Farn : " << timeSec << " sec " <<cfg.getKey()<< endl;
+        // cout << "Farn : " << timeSec << " sec " <<cfg.getKey()<< endl;
         bool is_smoke_detected = showProcessFlow(source_abs_path.c_str(), d_flow);
 
         if( is_smoke_detected ){
