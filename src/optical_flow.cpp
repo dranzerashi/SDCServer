@@ -138,10 +138,20 @@ static void showFlow(const char* name, const GpuMat& d_flow)
 }
 
 
-static GpuMat preprocessImage(GpuMat img, CamConfig cfg){
-    cv:Rect ROI = cfg.getROICoords();
-    // crop image
-    img = img(ROI);
+static GpuMat preprocessImage(GpuMat img, CamConfig &cfg){
+    cv:Rect ROI  = cfg.getROICoords();
+    try{   
+            img = img(ROI);
+
+        }catch(...){
+            cout <<"Warning :: GIVEN CO-ORDINATES ARE OUT OF RANGE "<<endl;
+            stringstream customString;
+            customString<<"(0,0);("<<img.size().width<<","<<img.size().height<<");";
+            cfg.setROI(customString.str());
+            Rect customCordinates = cfg.getROICoords();
+            img = img(customCordinates);
+       }
+
     GpuMat frame_HSV, frame_threshold, frame_res, out_img;
     Mat frame_HSV_inrange, frame_threshold_inrange, frame_bit, toSplitFrame;
     cv::cuda::cvtColor(img, frame_HSV, CV_BGR2HSV);

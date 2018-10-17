@@ -102,6 +102,9 @@ class CamConfig {
         std::string getIPAdress(){
             return ipAddress;
         }
+        void setROI(std::string roi){
+            roiCoords = roi;
+        }
 
 
         cv::Rect getROICoords(){
@@ -123,9 +126,9 @@ class CamConfig {
             std::smatch matches;
             std::regex_match (color, matches, r);
             cv::Vec3b minRange;
-            minRange[0] = std::stoi(matches[2]);
-            minRange[1] = std::stoi(matches[4]);
-            minRange[2] = std::stoi(matches[6]);
+            minRange[0] = std::stoi(matches[2]) > 255 ? 0 : std::stoi(matches[2]);
+            minRange[1] = std::stoi(matches[4]) > 255 ? 0 : std::stoi(matches[4]);
+            minRange[2] = std::stoi(matches[6]) > 255 ? 0 : std::stoi(matches[6]);
             // for(int i=0; i<matches.size();i++){
             //     std::cout<<"Match: "<<matches[i]<<std::endl;
             // }
@@ -137,9 +140,12 @@ class CamConfig {
             std::smatch matches;
             std::regex_match (color, matches, r);
             cv::Vec3b maxRange;
-            maxRange[0] = std::stoi(matches[3]);
-            maxRange[1] = std::stoi(matches[5]);
-            maxRange[2] = std::stoi(matches[7]);
+    
+            maxRange[0] = std::stoi(matches[3]) > 255 ? 255: std::stoi(matches[3]);
+            maxRange[1] = std::stoi(matches[5]) > 255 ? 255: std::stoi(matches[5]);
+            maxRange[2] = std::stoi(matches[7]) > 255 ? 255: std::stoi(matches[7]);
+
+            
             // for(int i=0; i<matches.size();i++){
             //     std::cout<<"Match: "<<matches[i]<<std::endl;
             // }

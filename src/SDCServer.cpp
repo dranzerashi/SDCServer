@@ -81,9 +81,9 @@ private:
         cout<<"Content "<<content<<endl;
         njson j = njson::parse(content);
         CamConfig cfg(j);
-    
+        
         //cout<<j["name"].get<string>()<<" is a "<<j["race"].get<string>()<<" who is always "<<j["status"].get<string>()<<endl;
-      
+        
         threadHandler.startThreadForMonitoring(cfg);
         response.send(Http::Code::Ok, "Started");
     }
