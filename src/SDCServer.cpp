@@ -85,6 +85,7 @@ private:
         //cout<<j["name"].get<string>()<<" is a "<<j["race"].get<string>()<<" who is always "<<j["status"].get<string>()<<endl;
         
         threadHandler.startThreadForMonitoring(cfg);
+        response.headers().add<Http::Header::ContentType>(MIME(Text, Plain));
         response.send(Http::Code::Ok, "Started");
     }
 
@@ -98,6 +99,7 @@ private:
       }
       threadHandler.stopThreadForMonitoring(cameraID, configID);
       cout<<"Stopping Monitoring on Thread with CameraID: "<<cameraID<<" and configID: "<<configID<<endl;
+      response.headers().add<Http::Header::ContentType>(MIME(Text, Plain));
       response.send(Http::Code::Ok, "Stopped");
     }
 
