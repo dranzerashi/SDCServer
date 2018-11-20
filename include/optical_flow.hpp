@@ -30,6 +30,7 @@ class OpticalFlowProcess{
         int64 detection_start_time = 0;
         // buffer_time -> time for which system needs to wait before resetting the 'detection_start_time' in case no smoke is detected before threshold time
         int64 buffer_time = 0;
+        int64 snooze_timeout = 600;
         void start_timer();
         void stop_timer();
         int64 timer_duration();

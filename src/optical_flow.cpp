@@ -173,7 +173,8 @@ static GpuMat preprocessImage(GpuMat img, CamConfig &cfg){
     split(toSplitFrame, channels);
     cv::bitwise_and(channels[0], channels[0], frame_bit, frame_threshold_inrange);
 
-    // cv::imshow("Preprocessed image",frame_bit);
+    // cv::imshow("Preprocessed image cpp",frame_bit);
+    // waitKey(25);
     out_img.upload(frame_bit);
     return out_img;
 
@@ -326,7 +327,7 @@ static bool showProcessFlow(const char* name, const GpuMat& d_flow)
     // if(is_smoke)
     //     cout<<"Smoke Detected!!"<<endl;
     // imshow(name, out);
-    waitKey(25);
+    // waitKey(25);
     return is_smoke;
 }
 
@@ -334,7 +335,7 @@ void OpticalFlowProcess::start_timer(){
     if(detection_start_time == 0)
         detection_start_time = getTickCount();
     
-    buffer_time = detection_start_time + cfg.getThreshold()/float(2);
+    buffer_time = detection_start_time + snooze_timeout;//cfg.getThreshold()/float(2);
 }
 
 int64 OpticalFlowProcess::timer_duration(){
