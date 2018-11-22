@@ -60,6 +60,7 @@ private:
         using namespace Rest;
         Routes::Post(router, "/start", Routes::bind(&OpticalFlowEndpoint::startMonitoringOnThread, this));
         Routes::Get(router, "/stop/:cameraID/:configID", Routes::bind(&OpticalFlowEndpoint::stopMonitoringOnThread, this));
+        Routes::Get(router, "/running", Routes::bind(&OpticalFlowEndpoint::runningThreads, this));
 
         // Routes::Post(router, "/record/:name/:value?", Routes::bind(&OpticalFlowEndpoint::doRecordMetric, this));
         // Routes::Get(router, "/value/:name", Routes::bind(&OpticalFlowEndpoint::doGetMetric, this));
@@ -68,6 +69,21 @@ private:
 
     }
 
+    void runningThreads(const Rest::Request& request, Http::ResponseWriter response){
+        try{
+            njson resp_json;
+            std::map<std::string, bool> current_threads = threadHandler.runningThreads();
+            for(std::map<std::string, bool>::iterator it = current_threads.begin(); it!=current_threads.end(); ++it){
+                resp_json[it->first] = it->second;
+            }
+            response.headers().add<Http::Header::ContentType>(MIME(Application, Json));
+            response.send(Http::Code::Ok, resp_json.dump(),MIME(Application, Json));
+        }
+        catch (std::exception e){
+            response.send(Http::Code::Internal_Server_Error);
+            std::cout<<e.what()<<endl;
+        }
+    }
 
     void startMonitoringOnThread(const Rest::Request& request, Http::ResponseWriter response){
         string cameraID, configID;
