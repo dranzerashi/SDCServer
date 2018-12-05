@@ -335,7 +335,7 @@ void OpticalFlowProcess::start_timer(){
     if(detection_start_time == 0)
         detection_start_time = getTickCount();
     
-    buffer_time = detection_start_time + snooze_timeout;//cfg.getThreshold()/float(2);
+    // buffer_time = detection_start_time/getTickFrequency() + snooze_timeout;//cfg.getThreshold()/float(2);
 }
 
 int64 OpticalFlowProcess::timer_duration(){
@@ -347,7 +347,7 @@ int64 OpticalFlowProcess::timer_duration(){
 
 void OpticalFlowProcess::stop_timer(){
     detection_start_time = 0;
-    buffer_time = 0;
+    // buffer_time = 0;
 }
 
 void OpticalFlowProcess::process(Mat frame){
@@ -389,13 +389,14 @@ void OpticalFlowProcess::process(Mat frame){
         if( is_smoke_detected ){
             if (detection_start_time == 0)
                 start_timer();
-            else
-                buffer_time = detection_start_time + cfg.getThreshold()/float(2);
+            // else
+            //     buffer_time = detection_start_time/getTickFrequency() + snooze_timeout;
             
             int64 current_duration = timer_duration();
-            if( current_duration > cfg.getThreshold() )
+            // cout<< getTickCount()/getTickFrequency() - last_post_timestamp<<"--:--"<<buffer_time<<endl;
+            if( current_duration > cfg.getThreshold() && getTickCount()/getTickFrequency() - latest_post_timestamp > buffer_time)
             {
-                //make POST call
+                cout<<"--------------------------------------------------------------making POST call-----------------------------------------------"<<endl;
                 time_t curr_time;
                 tm * curr_tm;
                 time(&curr_time);
@@ -408,11 +409,15 @@ void OpticalFlowProcess::process(Mat frame){
 
                 postEvent(event);
                 stop_timer();
+
+                latest_post_timestamp = getTickCount()/getTickFrequency();
+                buffer_time = snooze_timeout;
             }
         } else {
             int64 current_duration = timer_duration();
-            if( detection_start_time > 0 && current_duration > buffer_time )
+            if( detection_start_time > 0 && current_duration > buffer_time ){
                 stop_timer();
+            }
         }
 
         
