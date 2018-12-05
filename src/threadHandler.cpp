@@ -95,3 +95,11 @@ void ThreadHandler::stopThreadForMonitoring(std::string cameraID, std::string co
     }
     // (*threadPtr).join();
 }
+
+std::map<std::string, bool> ThreadHandler::runningThreads(){
+    std::cout<<"ThreadHandler::runningThreads"<<endl;
+    std::map<std::string, bool> copy_running_threads;
+    copy_running_threads.insert(running_threads->begin(), running_threads->end());
+    return copy_running_threads;
+    
+}
