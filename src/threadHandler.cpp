@@ -3,7 +3,7 @@
 #include <boost/bind.hpp>
 #include <boost/thread/thread.hpp>
 #include <boost/chrono.hpp>
-#include "optical_flow.hpp"
+#include "process_factory.hpp"
 
 
 using namespace std;
@@ -25,7 +25,8 @@ void startOpticalFlowMonitoring(shared_ptr<map<string, bool>> running_threads, C
         VideoCapture capture;
         capture.open(inputName);
         Mat frame;
-        OpticalFlowProcess ofp(cfg);
+        // OpticalFlowProcess ofp(cfg);
+        std::shared_ptr<Detector> ofp = ProcessFactory::getDetector(cfg);
         int ctr=0;
         const int64 start = getTickCount();
         bool is_fps_calculated = false;
@@ -39,13 +40,13 @@ void startOpticalFlowMonitoring(shared_ptr<map<string, bool>> running_threads, C
                 cout<<"Frames Ended"<<endl;
                 break;
             }
-            ofp.process(frame);
+            ofp.get()->detect(frame);
 
             ctr+=1;
             int64 duration = float(getTickCount() - start) / getTickFrequency();
             if(  duration > 5 && !is_fps_calculated){
                 is_fps_calculated = true;
-                cout<<"FPS for"<<inputName<<" is "<<ctr/duration<< endl;
+                cout<<"FPS for "<<inputName<<" is "<<ctr/duration<< endl;
             }
             
             //wait(1);
@@ -57,6 +58,9 @@ void startOpticalFlowMonitoring(shared_ptr<map<string, bool>> running_threads, C
     catch (boost::thread_interrupted &)
     {
         cout << "Thread interrupted" << endl;
+    }
+    catch (exception e){
+        cout << e.what() << endl;
     }
     running_threads->at(cfg.getKey())=false;
     cout << "Thread stopped" << endl;

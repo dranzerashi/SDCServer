@@ -92,6 +92,10 @@ class CamConfig {
             return std::stoi(threshold);
         }
 
+        std::string getModelID(){
+            return modelID;
+        }
+
         std::string getCamID(){
             return camID;
         }
