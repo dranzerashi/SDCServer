@@ -10,6 +10,8 @@
 #include <opencv2/opencv.hpp>
 #include "camconfig.hpp"
 
+#include "detector.hpp"
+
 #define BLOCK_SIZE 5
 #define ITERATIONS 8
 #define POLY_N 5
@@ -20,7 +22,7 @@
 
 void processFrameWithOpticalFlow(cv::Mat, cv::Mat);
 
-class OpticalFlowProcess{
+class OpticalFlowProcess: public Detector{
     private:
         cv::cuda::GpuMat prev_frame;
         cv::cuda::GpuMat curr_frame;
@@ -38,5 +40,5 @@ class OpticalFlowProcess{
     
     public:
         OpticalFlowProcess(CamConfig camconfig): farn(cv::cuda::FarnebackOpticalFlow::create(1,0.5,false,BLOCK_SIZE,ITERATIONS,POLY_N,POLY_SIGMA,0)), cfg(camconfig){}
-        void process(cv::Mat);
+        void detect(cv::Mat);
 };

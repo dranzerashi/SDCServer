@@ -1,6 +1,6 @@
 
 #include "optical_flow.hpp"
-#include "eventsApi.hpp"
+#include "events_api.hpp"
 #include <time.h>
 
 using namespace std;
@@ -350,7 +350,7 @@ void OpticalFlowProcess::stop_timer(){
     // buffer_time = 0;
 }
 
-void OpticalFlowProcess::process(Mat frame){
+void OpticalFlowProcess::detect(Mat frame){
     if (frame.empty())
     {
         return;
@@ -393,7 +393,7 @@ void OpticalFlowProcess::process(Mat frame){
             //     buffer_time = detection_start_time/getTickFrequency() + snooze_timeout;
             
             int64 current_duration = timer_duration();
-            // cout<< getTickCount()/getTickFrequency() - last_post_timestamp<<"--:--"<<buffer_time<<endl;
+            // cout<< getTickCount()/getTickFrequency() - latest_post_timestamp<<"--:--"<<buffer_time<<endl;
             if( current_duration > cfg.getThreshold() && getTickCount()/getTickFrequency() - latest_post_timestamp > buffer_time)
             {
                 cout<<"--------------------------------------------------------------making POST call-----------------------------------------------"<<endl;
