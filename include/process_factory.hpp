@@ -6,6 +6,7 @@
 #include "detector.hpp"
 #include "optical_flow.hpp"
 #include "black_water_detector.hpp"
+#include "flame_detection.hpp"
 
 using namespace std;
 
@@ -20,6 +21,9 @@ class ProcessFactory{
             } else if (cfg.getModelID() == "black_water_detection"){
                 cout<<"Model: black_water_detection"<<endl;
                 return make_shared<BlackWaterDetector>(BlackWaterDetector(cfg));
+            }else if (cfg.getModelID() == "flame_detection"){
+                cout<<"Model: flame_detection"<<endl;
+                return make_shared<FlameDetector>(FlameDetector(cfg));
             }
             throw runtime_error("No model ID present!!");
         }
