@@ -37,6 +37,7 @@ void FlameDetector::detect(cv::Mat input_frame)
     r1 = Motion_Detection( prevFrame , greyMat);
     r2 = get_HSI(croppedImg);
     r3 = Flame_Area_Detection(greyMat);
+     /* if you want to check which frame is givng what response then uncomment below code::*/
 
     // if(r1 && r2 && r3){
     //     cv::rectangle(frame_HSI ,regionOfInterest, cv::Scalar(0, 0, 255),THICKNESS);
@@ -50,29 +51,43 @@ void FlameDetector::detect(cv::Mat input_frame)
     // }
 
     //prev_frame = next_frame;
+    
     next_frame.download(prevFrame);
-    // imshow("Flame Detection", frame_HSI);
+    
+    if( r1 && r2 && r3 ){
+            if (detection_start_time == 0)
+                start_timer();
+            // else
+            //     buffer_time = detection_start_time/getTickFrequency() + snooze_timeout;
+            
+            int64 current_duration = timer_duration();
+            // cout<< getTickCount()/getTickFrequency() - latest_post_timestamp<<"--:--"<<buffer_time<<endl;
+            if( current_duration > cfg.getThreshold() && getTickCount()/getTickFrequency() - latest_post_timestamp > buffer_time)
+            {
+                cout<<"--------------------------------------------------------------making POST call-----------------------------------------------"<<endl;
+                time_t curr_time;
+                tm * curr_tm;
+                time(&curr_time);
+                curr_tm = gmtime(&curr_time);
+                char time_str[51];
+                Mat snapshot = frame(cfg.getROICoords());
+                strftime(time_str, 50, "%FT%T.000Z", curr_tm);
+                eventns::Event event(cfg.getCamID(), time_str, snapshot, "image/jpg","SMOKE_DETECTION");
+                // eventns::Event event(cfg.getCamID(), "2018-09-26T01:17:56.787Z", frame, "image/jpg","SMOKE_DETECTION");
 
+                postEvent(event);
+                stop_timer();
 
-    if (r1 && r2 && r3)
-    {
-        // cout<<"Dominant Pixel"<<endl;
-        int64 current_duration = timer_duration();
-        if (detection_start_time > 0 && current_duration > buffer_time)
-        {
-            stop_timer();
+                latest_post_timestamp = getTickCount()/getTickFrequency();
+                buffer_time = snooze_timeout;
+            }
+        } else {
+            int64 current_duration = timer_duration();
+            if( detection_start_time > 0 && current_duration > buffer_time ){
+                stop_timer();
+            }
         }
-        // cv::rectangle(original_frame, regionOfInterest, cv::Scalar(0, 0, 255), THICKNESS);
-    }
-    else
-    {
-        // cout<<"Not Dominant Pixel"<<dominant_pixel<<" - "<<THRESHOLD<<endl;
-        cv::rectangle(original_frame, regionOfInterest, cv::Scalar(0, 0, 255), THICKNESS);
-        check_and_notify(original_frame);
-    }
-
-    // cv::imshow("Black Water Detection", original_frame);
-    // waitKey(25);
+    //waitKey(25);
 }
 
 void FlameDetector::start_timer()

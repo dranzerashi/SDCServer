@@ -63,7 +63,7 @@ void BlackWaterDetector::detect(cv::Mat input_frame)
     }
 
     // cv::imshow("Black Water Detection", original_frame);
-    // waitKey(25);
+    waitKey(25);
 }
 
 void BlackWaterDetector::start_timer()
